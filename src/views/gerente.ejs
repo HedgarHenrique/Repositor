@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Gerente</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; padding-bottom: 50px; }
+        .container { width: 95%; max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 30px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; }
+        .header p { color: #94a3b8; font-size: 14px; margin-top: 5px; }
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-flex; }
+        .btn-blue { background-color: #3b82f6; color: white; }
+        .btn-green { background-color: #10b981; color: white; margin-left: 10px; }
+        .btn-action { padding: 5px 10px; font-size: 12px; border-radius: 4px; margin-right: 4px; color: white; border: none; cursor: pointer; text-decoration: none; font-weight: bold; display: inline-block; }
+        .btn-success { background-color: #10b981; }
+        .btn-edit { background-color: #f59e0b; }
+        .btn-danger { background-color: #ef4444; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        @media (max-width: 992px) { .grid { grid-template-columns: 1fr; } }
+        .card { background-color: #1e293b; border-radius: 12px; border: 1px solid #334155; overflow: hidden; }
+        .card-header { padding: 15px 20px; font-weight: bold; font-size: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .bg-bar { background-color: #b45309; color: #fef3c7; }
+        .bg-tabacaria { background-color: #991b1b; color: #fee2e2; }
+        .bg-unificada { background-color: #1e293b; color: #f8fafc; border-top: 4px solid #10b981; }
+        .badge { background-color: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 20px; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #334155; font-size: 14px; text-align: left; }
+        th { background-color: #0f172a; color: #94a3b8; }
+        .text-center { text-align: center; }
+        .text-muted { color: #64748b; }
+                /* 🖨️ SUPER REGRAS DE IMPRESSÃO EXCLUSIVA DA LISTA AGRUPADA */
+        @media print { 
+            /* Esconde absolutamente tudo na folha que não seja a lista unificada */
+            .no-print, .header, .grid, .card-header, #conteudo-seguro > .container > :not(.bg-unificada) { 
+                display: none !important; 
+            } 
+            body { 
+                background-color: white !important; 
+                color: black !important; 
+                padding: 0;
+            } 
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+            .card.bg-unificada { 
+                border: none !important; 
+                background: white !important; 
+                color: black !important; 
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .card.bg-unificada table {
+                width: 100% !important;
+                table-layout: fixed !important; /* Força o texto a quebrar linha em vez de esticar a coluna */
+            } 
+            th { 
+                background: #e2e8f0 !important; 
+                color: black !important; 
+                border: 1px solid #cbd5e1 !important;
+            } 
+            td {
+                color: black !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- CABEÇALHO -->
+        <div class="header">
+            <div>
+                <h1>📊 Painel de Controle - Reposição de Estoque</h1>
+                <p>Gerenciamento em tempo real do Bar e da Tabacaria</p>
+            </div>
+            <div class="no-print">
+                <a href="/" class="btn btn-blue">+ Novo Pedido</a>
+                <button onclick="window.print()" class="btn btn-green">🖨️ Imprimir Compra</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- COLUNA BAR -->
+            <div class="card">
+                <div class="card-header bg-bar">
+                    <span>🍺 Pedidos para o BAR</span>
+                    <span class="badge"><%= pedidosBar.length %> pendentes</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Funcionário</th>
+                            <th class="text-center">Qtd</th>
+                            <th>Item / Descrição</th>
+                            <th class="no-print">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% pedidosBar.forEach(pedido => { %>
+                            <tr>
+                                <td class="text-muted" style="font-size: 12px;"><%= pedido.data_formatada %></td>
+                                <td style="color: #3b82f6; font-weight: bold;"><%= pedido.funcionario %></td>
+                                <td class="text-center" style="font-weight: bold;"><%= pedido.quantidade %></td>
+                                <td><%= pedido.descricao %></td>
+                                <td class="no-print" style="white-space: nowrap;">
+                                    <form action="/pedido/<%= pedido.id %>/status?pin=<%= pin %>" method="POST" style="display:inline;">
+                                        <input type="hidden" name="novoStatus" value="Concluído">
+                                        <button class="btn-action btn-success">✓</button>
+                                    </form>
+                                    <a href="/pedido/<%= pedido.id %>/editar?pin=<%= pin %>" class="btn-action btn-edit">✎</a>
+                                    <form action="/pedido/<%= pedido.id %>/status?pin=<%= pin %>" method="POST" style="display:inline;">
+                                        <input type="hidden" name="novoStatus" value="Rejeitado">
+                                        <button class="btn-action btn-danger">✕</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                        <% if (pedidosBar.length === 0) { %>
+                            <tr><td colspan="5" class="text-center text-muted py-4">Nenhum pedido pendente</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- COLUNA TABACARIA -->
+            <div class="card">
+                <div class="card-header bg-tabacaria">
+                    <span>🚬 Pedidos para a TABACARIA</span>
+                    <span class="badge"><%= pedidosTabacaria.length %> pendentes</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Funcionário</th>
+                            <th class="text-center">Qtd</th>
+                            <th>Item / Descrição</th>
+                            <th class="no-print">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% pedidosTabacaria.forEach(pedido => { %>
+                            <tr>
+                                <td class="text-muted" style="font-size: 12px;"><%= pedido.data_formatada %></td>
+                                <td style="color: #ef4444; font-weight: bold;"><%= pedido.funcionario %></td>
+                                <td class="text-center" style="font-weight: bold;"><%= pedido.quantidade %></td>
+                                <td><%= pedido.descricao %></td>
+                                <td class="no-print" style="white-space: nowrap;">
+                                    <form action="/pedido/<%= pedido.id %>/status?pin=<%= pin %>" method="POST" style="display:inline;">
+                                        <input type="hidden" name="novoStatus" value="Concluído">
+                                        <button class="btn-action btn-success">✓</button>
+                                    </form>
+                                    <a href="/pedido/<%= pedido.id %>/editar?pin=<%= pin %>" class="btn-action btn-edit">✎</a>
+                                    <form action="/pedido/<%= pedido.id %>/status?pin=<%= pin %>" method="POST" style="display:inline;">
+                                        <input type="hidden" name="novoStatus" value="Rejeitado">
+                                        <button class="btn-action btn-danger">✕</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                        <% if (pedidosTabacaria.length === 0) { %>
+                            <tr><td colspan="5" class="text-center text-muted py-4">Nenhum pedido pendente</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- LISTA UNIFICADA -->
+        <div class="card bg-unificada">
+            <div class="card-header">
+                <span>📋 Lista Consolidada de Compras (Ordem Alfabética - Apenas Pendentes)</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 15%; background-color: #1e293b;">Quantidade Total</th>
+                        <th style="background-color: #1e293b;">Mercadoria / Item Especificado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% listaCompras.forEach(item => { %>
+                        <tr>
+                            <td class="text-center" style="font-weight: bold; font-size: 16px; color: #3b82f6;"><%= item.total_whitespace_quantidade %>x</td>
+                            <td style="text-transform: uppercase; font-weight: 600; color: #cbd5e1;"><%= item.descricao %></td>
+                        </tr>
+                    <% }) %>
+                    <% if (listaCompras.length === 0) { %>
+                        <tr><td colspan="2" class="text-center text-muted py-4">Nenhuma mercadoria pendente.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
